@@ -29,35 +29,29 @@ A simple console-based Flight Booking System made for an Object-Oriented C++ col
 - STL vector
 - File Handling
 
-## Project Structure
+## 📁 Project Structure
 
-FlightBookingSystem/
-│
-├── main.cpp
-│
-├── classes/
-│   ├── User.h
-│   ├── Passenger.h
-│   ├── Admin.h
-│   ├── Airport.h
-│   ├── Flight.h
-│   ├── Seat.h
-│   ├── Booking.h
-│   ├── Ticket.h
-│   ├── Payment.h
-│   └── Baggage.h
-│
-├── implementations/
-│   ├── User.cpp
-│   ├── Passenger.cpp
-│   └── Admin.cpp
-│
-├── data/
-│   ├── flights.dat       
-│   ├── passengers.dat    
-│   └── bookings.dat      
-│
-└── README.md
+| Path | Description |
+|---|---|
+| `main.cpp` | Main entry point of the application |
+| `classes/User.h` | Base user class |
+| `classes/Passenger.h` | Passenger class |
+| `classes/Admin.h` | Admin class |
+| `classes/Airport.h` | Airport information |
+| `classes/Flight.h` | Flight management |
+| `classes/Seat.h` | Seat management |
+| `classes/Booking.h` | Booking management |
+| `classes/Ticket.h` | Ticket and PNR generation |
+| `classes/Payment.h` | Payment abstraction |
+| `classes/Baggage.h` | Baggage management |
+| `implementations/User.cpp` | User class implementation |
+| `implementations/Passenger.cpp` | Passenger class implementation |
+| `implementations/Admin.cpp` | Admin class implementation |
+| `data/flights.dat` | Stores flight data |
+| `data/passengers.dat` | Stores passenger data |
+| `data/bookings.dat` | Stores booking data |
+| `README.md` | Project documentation |
+
 
 From inside the FlightBookingSystem folder:
 
