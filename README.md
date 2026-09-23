@@ -32,7 +32,9 @@ A simple console-based Flight Booking System made for an Object-Oriented C++ col
 ## Project Structure
 
 FlightBookingSystem/
+│
 ├── main.cpp
+│
 ├── classes/
 │   ├── User.h
 │   ├── Passenger.h
@@ -44,16 +46,18 @@ FlightBookingSystem/
 │   ├── Ticket.h
 │   ├── Payment.h
 │   └── Baggage.h
+│
 ├── implementations/
 │   ├── User.cpp
 │   ├── Passenger.cpp
 │   └── Admin.cpp
-└── data/
-    ├── flights.dat
-    ├── passengers.dat
-    └── bookings.dat
-
-## Compile with g++
+│
+├── data/
+│   ├── flights.dat       
+│   ├── passengers.dat    
+│   └── bookings.dat      
+│
+└── README.md
 
 From inside the FlightBookingSystem folder:
 
