@@ -1,38 +1,15 @@
 #include "../classes/Admin.h"
-
-Admin::Admin()
+Admin::Admin():User()
 {
-    employeeId = "";
-    role = "Administrator";
+    strcpy(employeeId,"");
+    strcpy(role,"Administrator");
 }
-
-Admin::Admin(int id, string name, string email,
-             string password, string phone,
-             string employeeId, string role)
-    : User(id, name, email, password, phone)
+Admin::Admin(int id,const char n[],const char e[],const char p[],const char ph[],const char emp[],const char r[]):User(id,n,e,p,ph)
 {
-    this->employeeId = employeeId;
-    this->role = role;
+    strcpy(employeeId,emp);
+    strcpy(role,r);
 }
-
 void Admin::displayProfile()
 {
-    cout << "\n============== ADMIN PROFILE ==============\n";
-    cout << "User ID       : " << userId << endl;
-    cout << "Name          : " << name << endl;
-    cout << "Email         : " << email << endl;
-    cout << "Phone         : " << phone << endl;
-    cout << "Employee ID   : " << employeeId << endl;
-    cout << "Role          : " << role << endl;
-    cout << "============================================\n";
-}
-
-string Admin::getEmployeeId() const
-{
-    return employeeId;
-}
-
-string Admin::getRole() const
-{
-    return role;
+    cout<<"\n--- Admin Profile ---\nID: "<<userId<<"\nName: "<<name<<"\nEmail: "<<email<<"\nEmployee ID: "<<employeeId<<"\nRole: "<<role<<"\n";
 }

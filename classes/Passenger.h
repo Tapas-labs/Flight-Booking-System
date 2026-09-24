@@ -1,36 +1,15 @@
 #ifndef PASSENGER_H
 #define PASSENGER_H
-
 #include "User.h"
 
-/*
-    Passenger class
-    ---------------
-    Inherits common information from User and adds passenger-specific data.
-*/
-class Passenger : public User
-{
-private:
-    string passportNo;
+class Passenger:public User {
+    char passportNo[30];
     int baggageAllowance;
-
 public:
     Passenger();
-
-    Passenger(int id, string name, string email,
-              string password, string phone,
-              string passportNo, int baggageAllowance);
-
-    void displayProfile() override;
-
-    // These methods are kept simple; main.cpp coordinates the actual modules.
-    void searchFlight();
-    void bookTicket();
-    void cancelTicket();
-    void viewBookingHistory();
-
-    string getPassportNo() const;
-    int getBaggageAllowance() const;
+    Passenger(int id,const char n[],const char e[],const char p[],const char ph[],const char pass[],int bag);
+    void displayProfile();
+    char* getPassportNo();
+    int getBaggageAllowance();
 };
-
 #endif

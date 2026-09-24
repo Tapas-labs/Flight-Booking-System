@@ -1,1100 +1,379 @@
 #include <iostream>
-#include <vector>
 #include <fstream>
-#include <sstream>
-#include <iomanip>
-#include <limits>
-#include <ctime>
-#include <algorithm>
-
-#include "classes/User.h"
+#include <string.h>
 #include "classes/Passenger.h"
 #include "classes/Admin.h"
-#include "classes/Airport.h"
 #include "classes/Flight.h"
-#include "classes/Seat.h"
 #include "classes/Booking.h"
-#include "classes/Ticket.h"
 #include "classes/Baggage.h"
+#include "classes/Ticket.h"
 #include "classes/Payment.h"
-
 using namespace std;
 
-/*
-    ============================================================
-    FLIGHT BOOKING SYSTEM - COMPLETE SIMPLE OOCP PROJECT
-    ============================================================
 
-    This project is intentionally kept simple.
+Flight flights[10]; 
+int flightCount=0;
 
-    Main modules:
-    1. User / Passenger / Admin
-    2. Airport / Flight / Seat
-    3. Booking / Ticket / Baggage
-    4. Payment (UPI / Card / Cash)
-    5. Simple file handling using .dat text files
+Passenger passengers[50]; 
+int passengerCount=0;
 
-    The main.cpp coordinates the application flow.
-    Class files contain the actual object-oriented structure.
-*/
+Booking bookings[100]; 
+int bookingCount=0;
 
-// ------------------------------------------------------------
-// Global data used by this simple console application
-// ------------------------------------------------------------
-vector<Flight> flights;
-vector<Passenger> passengers;
-vector<Booking> bookings;
+Admin admin(1,"System Admin","admin@gmail.com","admin123","9999999999","ADM001","Flight Manager");
 
-const string FLIGHT_FILE = "data/flights.dat";
-const string PASSENGER_FILE = "data/passengers.dat";
-const string BOOKING_FILE = "data/bookings.dat";
 
-// ------------------------------------------------------------
-// Utility functions
-// ------------------------------------------------------------
-
-void clearInput()
+int input()
 {
-    cin.clear();
-    cin.ignore(numeric_limits<streamsize>::max(), '\n');
+    int x;
+    cin>>x;
+    cin.ignore(1000,'\n');
+    return x;}
+
+void text(char a[],int n)
+{
+    cin.getline(a,n);
 }
 
-string currentDate()
-{
-    time_t now = time(nullptr);
-    tm* localTime = localtime(&now);
-
-    char buffer[20];
-    strftime(buffer, sizeof(buffer), "%d-%m-%Y", localTime);
-
-    return string(buffer);
+void savePassengers(){
+    ofstream f("data/passengers.dat");
+    for(int i=0;i<passengerCount;i++)
+        f<<passengers[i].getUserId()<<'\n'<<passengers[i].getName()<<'\n'<<passengers[i].getEmail()<<'\n'<<passengers[i].getPassword()<<'\n'<<passengers[i].getPhone()<<'\n'<<passengers[i].getPassportNo()<<'\n';
+    f.close();
 }
 
-int getNextBookingId()
-{
-    int maxId = 1000;
+void loadPassengers(){
+    ifstream f("data/passengers.dat"); 
+    if(!f)return;
+    int id; 
+    char n[50],e[50],p[30],ph[20],pass[30];
+    while(f>>id){
+        f.ignore(1000,'\n'); f.getline(n,50); f.getline(e,50); f.getline(p,30); f.getline(ph,20); f.getline(pass,30);
+        passengers[passengerCount++]=Passenger(id,n,e,p,ph,pass,20);
+        if(passengerCount>=50)break;
+    } f.close();
+}
 
-    for (const Booking& b : bookings)
-    {
-        if (b.getBookingId() > maxId)
-            maxId = b.getBookingId();
+void saveFlights(){
+    ofstream f("data/flights.dat");
+    for(int i=0;i<flightCount;i++)
+        f<<flights[i].getId()<<'\n'<<flights[i].getNumber()<<'\n'
+         <<flights[i].getAirline()<<'\n'<<flights[i].getSource()<<'\n'
+         <<flights[i].getDestination()<<'\n'<<flights[i].getDeparture()<<'\n'
+         <<flights[i].getArrival()<<'\n'<<flights[i].getFare()<<'\n';
+    f.close();
+}
+
+void loadFlights(){
+    ifstream f("data/flights.dat");
+    if(!f)return;
+    int id;
+     char no[20],air[40],s[40],d[40],dep[20],arr[20]; 
+     double fare;
+    while(f>>id){
+        f.ignore(1000,'\n');
+        f.getline(no,20); f.getline(air,40); f.getline(s,40); f.getline(d,40);
+        f.getline(dep,20); f.getline(arr,20); f>>fare;
+        f.ignore(1000,'\n');
+        flights[flightCount++]=Flight(id,no,air,s,d,dep,arr,fare);
+        if(flightCount>=10)break;
     }
-
-    return maxId + 1;
+    f.close();
 }
 
-int getNextPassengerId()
-{
-    int maxId = 100;
-
-    for (const Passenger& p : passengers)
-    {
-        if (p.getUserId() > maxId)
-            maxId = p.getUserId();
-    }
-
-    return maxId + 1;
+void saveBookings(){
+    ofstream f("data/bookings.dat");
+    for(int i=0;i<bookingCount;i++)
+        f<<bookings[i].getId()<<'\n'<<bookings[i].getPassengerId()<<'\n'
+         <<bookings[i].getFlightId()<<'\n'<<bookings[i].getSeat()<<'\n'
+         <<bookings[i].getPassengerName()<<'\n'<<bookings[i].getFlightNumber()<<'\n'
+         <<bookings[i].getAmount()<<'\n'<<bookings[i].getPNR()<<'\n'
+         <<bookings[i].getStatus()<<'\n';
+    f.close();
 }
 
-// ------------------------------------------------------------
-// File handling
-// ------------------------------------------------------------
-
-void saveFlights()
-{
-    ofstream file(FLIGHT_FILE);
-
-    if (!file)
-    {
-        cout << "Unable to save flight data.\n";
-        return;
-    }
-
-    /*
-        Format:
-        id|number|airline|source|destination|departure|arrival|seats|fare
-    */
-
-    for (const Flight& f : flights)
-    {
-        file << f.getFlightId() << "|"
-             << f.getFlightNumber() << "|"
-             << f.getAirline() << "|"
-             << f.getSource() << "|"
-             << f.getDestination() << "|"
-             << f.getDepartureTime() << "|"
-             << f.getArrivalTime() << "|"
-             << f.getTotalSeats() << "|"
-             << f.getBaseFare() << "\n";
-    }
-}
-
-void loadFlights()
-{
-    ifstream file(FLIGHT_FILE);
-
-    if (!file)
-        return;
-
-    string line;
-
-    while (getline(file, line))
-    {
-        if (line.empty())
-            continue;
-
-        stringstream ss(line);
-        string id, number, airline, source, destination;
-        string departure, arrival, seatsText, fareText;
-
-        getline(ss, id, '|');
-        getline(ss, number, '|');
-        getline(ss, airline, '|');
-        getline(ss, source, '|');
-        getline(ss, destination, '|');
-        getline(ss, departure, '|');
-        getline(ss, arrival, '|');
-        getline(ss, seatsText, '|');
-        getline(ss, fareText, '|');
-
-        if (!id.empty())
-        {
-            flights.push_back(
-                Flight(
-                    id,
-                    number,
-                    airline,
-                    source,
-                    destination,
-                    departure,
-                    arrival,
-                    stoi(seatsText),
-                    stod(fareText)
-                )
-            );
+void loadBookings(){
+    ifstream f("data/bookings.dat");
+    if(!f)return;
+    int id,pid,fid,seat; 
+    char pa[50],fl[20],pnr[20],status[20]; 
+    double amount;
+    while(f>>id>>pid>>fid>>seat){
+        f.ignore(1000,'\n');
+        f.getline(pa,50); f.getline(fl,20); f>>amount; f.ignore(1000,'\n');
+        f.getline(pnr,20); f.getline(status,20);
+        bookings[bookingCount++]=Booking(id,pid,fid,seat,pa,fl,amount,pnr);
+        if(strcmp(status,"Cancelled")==0) bookings[bookingCount-1].cancel();
+        if(strcmp(status,"Confirmed")==0){
+            for(int j=0;j<flightCount;j++) if(flights[j].getId()==fid) flights[j].bookSeat(seat);
         }
+        if(bookingCount>=100)break;
     }
+    f.close();
 }
-
-void savePassengers()
-{
-    ofstream file(PASSENGER_FILE);
-
-    if (!file)
-    {
-        cout << "Unable to save passenger data.\n";
+void defaults(){
+    ifstream f("data/flights.dat");
+    bool exists=(bool)f; 
+    f.close();
+    if(exists)
+    {loadFlights();
+        if(flightCount>0)
         return;
     }
-
-    /*
-        Format:
-        id|name|email|password|phone|passport|allowance
-    */
-
-    for (const Passenger& p : passengers)
-    {
-        file << p.getUserId() << "|"
-             << p.getName() << "|"
-             << p.getEmail() << "|"
-             << "1234" << "|"
-             << p.getPhone() << "|"
-             << p.getPassportNo() << "|"
-             << p.getBaggageAllowance() << "\n";
-    }
-}
-
-void loadPassengers()
-{
-    ifstream file(PASSENGER_FILE);
-
-    if (!file)
-        return;
-
-    string line;
-
-    while (getline(file, line))
-    {
-        if (line.empty())
-            continue;
-
-        stringstream ss(line);
-
-        string idText, name, email, password;
-        string phone, passport, allowanceText;
-
-        getline(ss, idText, '|');
-        getline(ss, name, '|');
-        getline(ss, email, '|');
-        getline(ss, password, '|');
-        getline(ss, phone, '|');
-        getline(ss, passport, '|');
-        getline(ss, allowanceText, '|');
-
-        if (!idText.empty())
-        {
-            passengers.push_back(
-                Passenger(
-                    stoi(idText),
-                    name,
-                    email,
-                    password,
-                    phone,
-                    passport,
-                    stoi(allowanceText)
-                )
-            );
-        }
-    }
-}
-
-void saveBookings()
-{
-    ofstream file(BOOKING_FILE);
-
-    if (!file)
-    {
-        cout << "Unable to save booking data.\n";
-        return;
-    }
-
-    /*
-        Format:
-        bookingId|passengerId|flightId|seat|date|baggage|amount|status
-    */
-
-    for (const Booking& b : bookings)
-    {
-        file << b.getBookingId() << "|"
-             << b.getPassengerId() << "|"
-             << b.getFlightId() << "|"
-             << b.getSeatNumber() << "|"
-             << b.getBookingDate() << "|"
-             << b.getBaggageWeight() << "|"
-             << b.getTotalAmount() << "|"
-             << b.getStatus() << "\n";
-    }
-}
-
-void loadBookings()
-{
-    ifstream file(BOOKING_FILE);
-
-    if (!file)
-        return;
-
-    string line;
-
-    while (getline(file, line))
-    {
-        if (line.empty())
-            continue;
-
-        stringstream ss(line);
-
-        string idText, passengerText, flightId, seat;
-        string date, baggageText, amountText, status;
-
-        getline(ss, idText, '|');
-        getline(ss, passengerText, '|');
-        getline(ss, flightId, '|');
-        getline(ss, seat, '|');
-        getline(ss, date, '|');
-        getline(ss, baggageText, '|');
-        getline(ss, amountText, '|');
-        getline(ss, status, '|');
-
-        if (!idText.empty())
-        {
-            bookings.push_back(
-                Booking(
-                    stoi(idText),
-                    stoi(passengerText),
-                    flightId,
-                    seat,
-                    date,
-                    stod(baggageText),
-                    stod(amountText),
-                    status
-                )
-            );
-        }
-    }
-}
-
-// ------------------------------------------------------------
-// Sample flight data
-// ------------------------------------------------------------
-
-void createDefaultFlights()
-{
-    if (!flights.empty())
-        return;
-
-    flights.push_back(
-        Flight(
-            "F101",
-            "AI203",
-            "Air India",
-            "Ahmedabad",
-            "Delhi",
-            "10:30 AM",
-            "12:15 PM",
-            20,
-            4500
-        )
-    );
-
-    flights.push_back(
-        Flight(
-            "F102",
-            "6E501",
-            "IndiGo",
-            "Ahmedabad",
-            "Mumbai",
-            "02:00 PM",
-            "03:20 PM",
-            20,
-            3200
-        )
-    );
-
-    flights.push_back(
-        Flight(
-            "F103",
-            "6E701",
-            "IndiGo",
-            "Delhi",
-            "Bangalore",
-            "08:00 AM",
-            "10:40 AM",
-            20,
-            5200
-        )
-    );
-
+    flightCount=3;
+    flights[0]=Flight(101,"AI203","Air India","Ahmedabad","Delhi","10:30","12:15",4500);
+    flights[1]=Flight(102,"6E501","IndiGo","Ahmedabad","Mumbai","14:00","15:15",3000);
+    flights[2]=Flight(103,"SG102","SpiceJet","Delhi","Ahmedabad","17:30","19:00",4200);
     saveFlights();
 }
 
-// ------------------------------------------------------------
-// Passenger registration
-// ------------------------------------------------------------
+void showFlights()
+{
+    for(int i=0;i<flightCount;i++)
+    flights[i].display();
+}
 
 void registerPassenger()
 {
-    string name, email, password, phone, passport;
-    int allowance;
-
-    cin.ignore(numeric_limits<streamsize>::max(), '\n');
-
-    cout << "\n========== PASSENGER REGISTRATION ==========\n";
-
-    cout << "Enter Name: ";
-    getline(cin, name);
-
-    cout << "Enter Email: ";
-    getline(cin, email);
-
-    cout << "Create Password: ";
-    getline(cin, password);
-
-    cout << "Enter Phone: ";
-    getline(cin, phone);
-
-    cout << "Enter Passport Number: ";
-    getline(cin, passport);
-
-    cout << "Enter Baggage Allowance (KG): ";
-    cin >> allowance;
-
-    int id = getNextPassengerId();
-
-    passengers.push_back(
-        Passenger(
-            id,
-            name,
-            email,
-            password,
-            phone,
-            passport,
-            allowance
-        )
-    );
-
-    savePassengers();
-
-    cout << "\nRegistration Successful!\n";
-    cout << "Your Passenger ID is: " << id << endl;
+    if(passengerCount>=50)
+    return;
+    char n[50],e[50],p[30],ph[20],pass[30];
+    cout<<"Name: ";text(n,50); 
+    cout<<"Email: ";text(e,50); 
+    cout<<"Password: ";text(p,30);
+    cout<<"Phone: ";text(ph,20); 
+    cout<<"Passport: ";text(pass,30);
+    int id=101+passengerCount;
+    passengers[passengerCount++]=Passenger(id,n,e,p,ph,pass,20);
+    savePassengers(); cout<<"Registered. Passenger ID: "<<id<<"\n";
 }
-
-// ------------------------------------------------------------
-// Find passenger by email
-// ------------------------------------------------------------
-
-Passenger* findPassenger(string email)
-{
-    for (Passenger& p : passengers)
+void history(int pid){
+    bool found=false;
+    for(int i=0;i<bookingCount;i++)
+    if(bookings[i].getPassengerId()==pid)
     {
-        if (p.getEmail() == email)
-            return &p;
+        bookings[i].display();found=true;
     }
-
-    return nullptr;
+    if(!found)cout<<"No bookings.\n";
 }
 
-// ------------------------------------------------------------
-// Display all flights
-// ------------------------------------------------------------
-
-void displayAllFlights()
+void book(int pi)
 {
-    if (flights.empty())
+    showFlights(); 
+    cout<<"Flight ID: "; 
+    int id=input(); 
+    int fi=-1;
+    for(int i=0;i<flightCount;i++)
+    if(flights[i].getId()==id)
+    fi=i;
+    if(fi<0)
     {
-        cout << "\nNo flights available.\n";
+        cout<<"Invalid flight.\n";
         return;
     }
-
-    cout << "\n========== AVAILABLE FLIGHTS ==========\n";
-
-    for (const Flight& f : flights)
-        f.displayDetails();
-}
-
-// ------------------------------------------------------------
-// Search flights
-// ------------------------------------------------------------
-
-void searchFlights()
-{
-    string source, destination;
-
-    cin.ignore(numeric_limits<streamsize>::max(), '\n');
-
-    cout << "\nEnter Source: ";
-    getline(cin, source);
-
-    cout << "Enter Destination: ";
-    getline(cin, destination);
-
-    bool found = false;
-
-    for (const Flight& f : flights)
+    flights[fi].showSeats(); 
+    cout<<"Seat (1-20): "; 
+    int seat=input();
+    if(!flights[fi].seatAvailable(seat)||!flights[fi].bookSeat(seat))
     {
-        if (f.getSource() == source &&
-            f.getDestination() == destination)
-        {
-            f.displayDetails();
-            found = true;
-        }
-    }
-
-    if (!found)
-        cout << "\nNo matching flight found.\n";
-}
-
-// ------------------------------------------------------------
-// Find flight by ID
-// ------------------------------------------------------------
-
-Flight* findFlight(string id)
-{
-    for (Flight& f : flights)
-    {
-        if (f.getFlightId() == id)
-            return &f;
-    }
-
-    return nullptr;
-}
-
-// ------------------------------------------------------------
-// Display passenger bookings
-// ------------------------------------------------------------
-
-void displayPassengerBookings(int passengerId)
-{
-    bool found = false;
-
-    cout << "\n========== YOUR BOOKINGS ==========\n";
-
-    for (const Booking& b : bookings)
-    {
-        if (b.getPassengerId() == passengerId)
-        {
-            b.displayBookingDetails();
-            found = true;
-        }
-    }
-
-    if (!found)
-        cout << "No bookings found.\n";
-}
-
-// ------------------------------------------------------------
-// Book a flight
-// ------------------------------------------------------------
-
-void bookFlight(Passenger& passenger)
-{
-    displayAllFlights();
-
-    string flightId;
-    cout << "\nEnter Flight ID: ";
-    cin >> flightId;
-
-    Flight* flight = findFlight(flightId);
-
-    if (flight == nullptr)
-    {
-        cout << "\nFlight not found.\n";
+        cout<<"Seat unavailable.\n";
         return;
     }
-
-    flight->displaySeats();
-
-    string seatNumber;
-    cout << "\nEnter Seat Number: ";
-    cin >> seatNumber;
-
-    if (!flight->isSeatAvailable(seatNumber))
+    cout<<"Baggage KG: "; 
+    int w=input(); 
+    Baggage b(w); 
+    b.display();
+    double total=flights[fi].getFare()+b.getCharge();
+    cout<<"Total: Rs. "<<total<<"\n1.UPI 2.Card 3.Cash\nChoice: ";
+    int c=input();
+    Payment* pay=0; 
+    char data[50];
+    if(c==1)
     {
-        cout << "\nSeat is not available or does not exist.\n";
-        return;
+        cout<<"UPI ID: ";
+        text(data,50);
+        pay=new UPIPayment(total,data);
     }
-
-    double baggageWeight;
-
-    cout << "Enter total baggage weight (KG): ";
-    cin >> baggageWeight;
-
-    // Calculate extra baggage charges.
-    Baggage baggage(
-        1,
-        baggageWeight,
-        passenger.getBaggageAllowance()
-    );
-
-    double baggageCharge = baggage.getExtraCharge();
-
-    // Simple seat charge for window seat.
-    // To keep the project simple, we do not inspect seat type here.
-    double seatCharge = 0;
-
-    double total = flight->getBaseFare()
-                 + baggageCharge
-                 + seatCharge;
-
-    cout << fixed << setprecision(2);
-
-    cout << "\n========== FARE SUMMARY ==========\n";
-    cout << "Base Fare       : Rs. " << flight->getBaseFare() << endl;
-    cout << "Baggage Charge  : Rs. " << baggageCharge << endl;
-    cout << "Seat Charge     : Rs. " << seatCharge << endl;
-    cout << "Total           : Rs. " << total << endl;
-    cout << "==================================\n";
-
-    cout << "\nSelect Payment Method:\n";
-    cout << "1. UPI\n";
-    cout << "2. Card\n";
-    cout << "3. Cash\n";
-    cout << "Enter Choice: ";
-
-    int paymentChoice;
-    cin >> paymentChoice;
-
-    Payment* payment = nullptr;
-
-    string date = currentDate();
-
-    if (paymentChoice == 1)
+    else if(c==2)
     {
-        string upi;
-        cout << "Enter UPI ID: ";
-        cin >> upi;
-
-        payment = new UPIPayment(
-            1,
-            total,
-            date,
-            upi
-        );
+        cout<<"Card Number: ";
+        text(data,50);
+        pay=new CardPayment(total,data);
     }
-    else if (paymentChoice == 2)
-    {
-        string cardNumber, holder;
-
-        cout << "Enter Card Number: ";
-        cin >> cardNumber;
-
-        cin.ignore(numeric_limits<streamsize>::max(), '\n');
-
-        cout << "Enter Card Holder Name: ";
-        getline(cin, holder);
-
-        payment = new CardPayment(
-            1,
-            total,
-            date,
-            cardNumber,
-            holder
-        );
-    }
-    else if (paymentChoice == 3)
-    {
-        payment = new CashPayment(
-            1,
-            total,
-            date
-        );
-    }
+    else if(c==3)pay=new CashPayment(total);
+    
     else
     {
-        cout << "\nInvalid payment method.\n";
+        cout<<"Invalid payment.\n";
+        flights[fi].cancelSeat(seat);
         return;
     }
-
-    // Runtime polymorphism:
-    // Payment pointer calls the correct child class pay().
-    bool paymentSuccess = payment->pay();
-
-    delete payment;
-
-    if (!paymentSuccess)
+    pay->pay();delete pay;
+    
+    int bid=1001+bookingCount;
+    char pnr[20];
+    strcpy(pnr,"PNR");
+    char num[10]; 
+    int n=bid,j=0;
+    while(n)
     {
-        cout << "\nPayment failed. Booking cancelled.\n";
-        return;
+        num[j++]=char('0'+n%10);
+        n/=10;
     }
-
-    // Only book the seat after successful payment.
-    if (!flight->bookSeat(seatNumber))
+    for(int k=0;k<j/2;k++)
     {
-        cout << "\nSeat could not be booked.\n";
-        return;
+        char t=num[k];
+        num[k]=num[j-k-1];
+        num[j-k-1]=t;
     }
-
-    int bookingId = getNextBookingId();
-
-    Booking newBooking(
-        bookingId,
-        passenger.getUserId(),
-        flight->getFlightId(),
-        seatNumber,
-        currentDate(),
-        baggageWeight,
-        total,
-        "Confirmed"
-    );
-
-    bookings.push_back(newBooking);
-    saveBookings();
-
-    cout << "\nBooking Confirmed Successfully!\n";
-
-    Ticket ticket(
-        bookingId,
-        passenger.getName(),
-        flight->getFlightNumber(),
-        flight->getSource() + " -> " + flight->getDestination(),
-        seatNumber,
-        total
-    );
-
-    ticket.displayTicket();
+    num[j]='\0';
+    strcat(pnr,num);
+    bookings[bookingCount++]=Booking(bid,passengers[pi].getUserId(),id,seat,passengers[pi].getName(),flights[fi].getNumber(),total,pnr);
+    saveBookings(); Ticket t(bid,pnr,passengers[pi].getName(),flights[fi].getNumber(),seat,total);t.display();
+}
+void cancel(int pid)
+{
+    history(pid); 
+    cout<<"Booking ID: ";
+    int id=input();
+    for(int i=0;i<bookingCount;i++)
+    if(bookings[i].getId()==id&&bookings[i].getPassengerId()==pid)
+    {
+        if(strcmp(bookings[i].getStatus(),"Cancelled")==0){
+            cout<<"Already cancelled.\n";
+            return;}
+        for(int j=0;j<flightCount;j++)
+        if(flights[j].getId()==bookings[i].getFlightId())flights[j].cancelSeat(bookings[i].getSeat());
+        bookings[i].cancel();saveBookings();
+        cout<<"Booking cancelled.\n";
+        return;
+    } 
+    cout<<"Booking not found.\n";
 }
 
-// ------------------------------------------------------------
-// Cancel booking
-// ------------------------------------------------------------
-
-void cancelBooking(Passenger& passenger)
+void passengerMenu(int pi)
 {
-    displayPassengerBookings(passenger.getUserId());
-
-    int bookingId;
-
-    cout << "\nEnter Booking ID to cancel: ";
-    cin >> bookingId;
-
-    for (Booking& b : bookings)
-    {
-        if (b.getBookingId() == bookingId &&
-            b.getPassengerId() == passenger.getUserId())
-        {
-            if (b.getStatus() == "Cancelled")
-            {
-                cout << "\nBooking is already cancelled.\n";
-                return;
-            }
-
-            Flight* flight = findFlight(b.getFlightId());
-
-            if (flight != nullptr)
-                flight->cancelSeat(b.getSeatNumber());
-
-            b.setStatus("Cancelled");
-
-            saveBookings();
-
-            cout << "\nBooking cancelled successfully.\n";
-            return;
+    int c;
+    do{
+        cout<<"\n--- Passenger Menu ---\n1.Profile\n2.All Flights\n3.Search\n4.Book\n5.History\n6.Cancel\n7.Logout\nChoice: ";c=input();
+        if(c==1)passengers[pi].displayProfile();
+        else if(c==2)showFlights();
+        else if(c==3){char a[40],b[40];
+            cout<<"Source: ";text(a,40);
+            cout<<"Destination: ";
+            text(b,40);
+            for(int i=0;i<flightCount;i++)
+            if(flights[i].matches(a,b))flights[i].display();
         }
+        else if(c==4)book(pi);
+        else if(c==5)history(passengers[pi].getUserId());
+        else if(c==6)cancel(passengers[pi].getUserId());
+        else if(c==7)passengers[pi].logout();
+        else cout<<"Invalid choice.\n";
     }
-
-    cout << "\nBooking not found.\n";
+    while(c!=7);
 }
-
-// ------------------------------------------------------------
-// Passenger menu
-// ------------------------------------------------------------
-
-void passengerMenu(Passenger& passenger)
-{
-    int choice;
-
-    do
+void passengerLogin(){
+    char e[50],p[30];
+    cout<<"Email: ";
+    text(e,50);
+    cout<<"Password: ";
+    text(p,30);
+    for(int i=0;i<passengerCount;i++)
+    if(passengers[i].login(e,p))
     {
-        cout << "\n========================================\n";
-        cout << "          PASSENGER MENU\n";
-        cout << "========================================\n";
-        cout << "1. View Profile\n";
-        cout << "2. View All Flights\n";
-        cout << "3. Search Flight\n";
-        cout << "4. Book Flight\n";
-        cout << "5. View Booking History\n";
-        cout << "6. Cancel Booking\n";
-        cout << "7. Logout\n";
-        cout << "Enter Choice: ";
-
-        cin >> choice;
-
-        switch (choice)
-        {
-        case 1:
-            passenger.displayProfile();
-            break;
-
-        case 2:
-            displayAllFlights();
-            break;
-
-        case 3:
-            searchFlights();
-            break;
-
-        case 4:
-            bookFlight(passenger);
-            break;
-
-        case 5:
-            displayPassengerBookings(passenger.getUserId());
-            break;
-
-        case 6:
-            cancelBooking(passenger);
-            break;
-
-        case 7:
-            passenger.logout();
-            break;
-
-        default:
-            cout << "\nInvalid choice.\n";
-        }
-
-    } while (choice != 7);
-}
-
-// ------------------------------------------------------------
-// Passenger login
-// ------------------------------------------------------------
-
-void passengerLogin()
-{
-    string email, password;
-
-    cin.ignore(numeric_limits<streamsize>::max(), '\n');
-
-    cout << "\n========== PASSENGER LOGIN ==========\n";
-
-    cout << "Email: ";
-    getline(cin, email);
-
-    cout << "Password: ";
-    getline(cin, password);
-
-    Passenger* passenger = findPassenger(email);
-
-    if (passenger == nullptr)
-    {
-        cout << "\nPassenger not found. Please register first.\n";
+        cout<<"Login successful.\n";
+        passengerMenu(i);
         return;
     }
-
-    if (passenger->login(email, password))
-    {
-        passengerMenu(*passenger);
-    }
+    cout<<"Invalid login.\n";
 }
-
-// ------------------------------------------------------------
-// Admin functions
-// ------------------------------------------------------------
-
-void adminAddFlight()
-{
-    string id, number, airline, source, destination;
-    string departure, arrival;
-    int seats;
+void addFlight(){
+    int id;
+    char no[20],air[40],s[40],d[40],dep[20],arr[20];
     double fare;
-
-    cin.ignore(numeric_limits<streamsize>::max(), '\n');
-
-    cout << "\n========== ADD FLIGHT ==========\n";
-
-    cout << "Flight ID: ";
-    getline(cin, id);
-
-    if (findFlight(id) != nullptr)
-    {
-        cout << "Flight ID already exists.\n";
-        return;
-    }
-
-    cout << "Flight Number: ";
-    getline(cin, number);
-
-    cout << "Airline: ";
-    getline(cin, airline);
-
-    cout << "Source: ";
-    getline(cin, source);
-
-    cout << "Destination: ";
-    getline(cin, destination);
-
-    cout << "Departure Time: ";
-    getline(cin, departure);
-
-    cout << "Arrival Time: ";
-    getline(cin, arrival);
-
-    cout << "Total Seats (max 20 in this simple version): ";
-    cin >> seats;
-
-    if (seats < 1)
-    {
-        cout << "Invalid number of seats.\n";
-        return;
-    }
-
-    cout << "Base Fare: ";
-    cin >> fare;
-
-    flights.push_back(
-        Flight(
-            id,
-            number,
-            airline,
-            source,
-            destination,
-            departure,
-            arrival,
-            seats,
-            fare
-        )
-    );
-
+    cout<<"ID: ";
+    id=input();
+    cout<<"Number: ";
+    text(no,20);
+    cout<<"Airline: ";
+    text(air,40);
+    cout<<"Source: ";
+    text(s,40);
+    cout<<"Destination: ";
+    text(d,40);
+    cout<<"Departure: ";
+    text(dep,20);
+    cout<<"Arrival: ";
+    text(arr,20);
+    cout<<"Fare: ";
+    cin>>fare;
+    cin.ignore(1000,'\n');
+    flights[flightCount++]=Flight(id,no,air,s,d,dep,arr,fare);
     saveFlights();
-
-    cout << "\nFlight added successfully.\n";
+    cout<<"Flight added.\n";
+}
+void removeFlight(){
+    showFlights();
+    cout<<"Flight ID: ";
+    int id=input();
+    for(int i=0;i<flightCount;i++)
+    if(flights[i].getId()==id)
+    {
+        for(int j=i;j<flightCount-1;j++)
+        flights[j]=flights[j+1];
+    flightCount--;
+    saveFlights();
+    cout<<"Removed.\n";
+    return;}
+    cout<<"Not found.\n";
 }
 
-void adminRemoveFlight()
-{
-    string id;
-
-    cout << "\nEnter Flight ID to remove: ";
-    cin >> id;
-
-    for (auto it = flights.begin(); it != flights.end(); ++it)
-    {
-        if (it->getFlightId() == id)
+void adminMenu(){
+    int c;
+    do{
+        cout<<"\n--- Admin Menu ---\n1.Profile\n2.Flights\n3.Add Flight\n4.Remove Flight\n5.All Bookings\n6.Logout\nChoice: ";c=input();
+        if(c==1)admin.displayProfile();
+        else if(c==2)showFlights();
+        else if(c==3)addFlight();
+        else if(c==4)removeFlight();
+        else if(c==5)
         {
-            flights.erase(it);
-            saveFlights();
-
-            cout << "\nFlight removed successfully.\n";
-            return;
+            for(int i=0;i<bookingCount;i++)
+            bookings[i].display();
         }
+        else if(c==6)admin.logout();
+        else cout<<"Invalid choice.\n";
     }
-
-    cout << "\nFlight not found.\n";
+    while(c!=6);
 }
-
-void adminViewBookings()
-{
-    if (bookings.empty())
+void adminLogin(){
+    char e[50],p[30];cout<<"Email: ";
+    text(e,50);
+    cout<<"Password: ";
+    text(p,30);
+    if(admin.login(e,p))
     {
-        cout << "\nNo bookings available.\n";
-        return;
-    }
-
-    cout << "\n========== ALL BOOKINGS ==========\n";
-
-    for (const Booking& b : bookings)
-        b.displayBookingDetails();
-}
-
-void adminMenu()
-{
-    int choice;
-
-    do
-    {
-        cout << "\n========================================\n";
-        cout << "             ADMIN MENU\n";
-        cout << "========================================\n";
-        cout << "1. View All Flights\n";
-        cout << "2. Add Flight\n";
-        cout << "3. Remove Flight\n";
-        cout << "4. View All Bookings\n";
-        cout << "5. Logout\n";
-        cout << "Enter Choice: ";
-
-        cin >> choice;
-
-        switch (choice)
-        {
-        case 1:
-            displayAllFlights();
-            break;
-
-        case 2:
-            adminAddFlight();
-            break;
-
-        case 3:
-            adminRemoveFlight();
-            break;
-
-        case 4:
-            adminViewBookings();
-            break;
-
-        case 5:
-            cout << "\nAdmin logged out.\n";
-            break;
-
-        default:
-            cout << "\nInvalid choice.\n";
-        }
-
-    } while (choice != 5);
-}
-
-// ------------------------------------------------------------
-// Admin login
-// ------------------------------------------------------------
-
-void adminLogin()
-{
-    string email, password;
-
-    cin.ignore(numeric_limits<streamsize>::max(), '\n');
-
-    cout << "\n========== ADMIN LOGIN ==========\n";
-
-    cout << "Email: ";
-    getline(cin, email);
-
-    cout << "Password: ";
-    getline(cin, password);
-
-    /*
-        For a simple college project we use one fixed admin account.
-        Real applications should use a proper database/authentication system.
-    */
-    Admin admin(
-        1,
-        "System Admin",
-        "admin@airline.com",
-        "admin123",
-        "9999999999",
-        "ADM001",
-        "Flight Manager"
-    );
-
-    if (admin.login(email, password))
-    {
-        admin.displayProfile();
+        cout<<"Login successful.\n";
         adminMenu();
     }
+    else cout<<"Invalid login.\n";
 }
-
-// ------------------------------------------------------------
-// Main menu
-// ------------------------------------------------------------
-
-int main()
-{
-    // Load existing data from files.
-    loadFlights();
+int main(){
+    defaults();
     loadPassengers();
     loadBookings();
-
-    // If no flight file exists, create a few sample flights.
-    createDefaultFlights();
-
-    int choice;
-
-    do
-    {
-        cout << "\n\n";
-        cout << "============================================\n";
-        cout << "        FLIGHT BOOKING SYSTEM\n";
-        cout << "        C++ OOCP PROJECT\n";
-        cout << "============================================\n";
-        cout << "1. Passenger Registration\n";
-        cout << "2. Passenger Login\n";
-        cout << "3. Admin Login\n";
-        cout << "4. View Flights\n";
-        cout << "5. Exit\n";
-        cout << "--------------------------------------------\n";
-        cout << "Enter Choice: ";
-
-        cin >> choice;
-
-        switch (choice)
-        {
-        case 1:
-            registerPassenger();
-            break;
-
-        case 2:
-            passengerLogin();
-            break;
-
-        case 3:
-            adminLogin();
-            break;
-
-        case 4:
-            displayAllFlights();
-            break;
-
-        case 5:
-            cout << "\nThank you for using Flight Booking System!\n";
-            break;
-
-        default:
-            cout << "\nInvalid choice. Please try again.\n";
-        }
-
-    } while (choice != 5);
-
-    // Save data before closing.
-    saveFlights();
-    savePassengers();
-    saveBookings();
-
+    cout<<"=================================\n   FLIGHT BOOKING SYSTEM\n=================================\n";
+    int c;
+    do{
+        cout<<"\n1.Register Passenger\n2.Passenger Login\n3.Admin Login\n4.View Flights\n5.Exit\nChoice: ";c=input();
+        if(c==1)registerPassenger();
+        else if(c==2)passengerLogin();
+        else if(c==3)adminLogin();
+        else if(c==4)showFlights();
+        else if(c==5)cout<<"Thank you.\n";
+        else cout<<"Invalid choice.\n";
+    }
+    while(c!=5);
     return 0;
 }

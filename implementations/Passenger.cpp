@@ -1,63 +1,23 @@
 #include "../classes/Passenger.h"
-
-Passenger::Passenger()
+Passenger::Passenger():User()
 {
-    passportNo = "";
-    baggageAllowance = 20;
+    strcpy(passportNo,"");
+    baggageAllowance=20;
 }
-
-Passenger::Passenger(
-    int id,
-    string name,
-    string email,
-    string password,
-    string phone,
-    string passportNo,
-    int baggageAllowance
-) : User(id, name, email, password, phone)
+Passenger::Passenger(int id,const char n[],const char e[],const char p[],const char ph[],const char pass[],int bag):User(id,n,e,p,ph)
 {
-    this->passportNo = passportNo;
-    this->baggageAllowance = baggageAllowance;
+    strcpy(passportNo,pass);
+    baggageAllowance=bag;
 }
-
 void Passenger::displayProfile()
 {
-    cout << "\n========== PASSENGER PROFILE ==========\n";
-    cout << "User ID            : " << userId << endl;
-    cout << "Name               : " << name << endl;
-    cout << "Email              : " << email << endl;
-    cout << "Phone              : " << phone << endl;
-    cout << "Passport Number    : " << passportNo << endl;
-    cout << "Baggage Allowance  : " << baggageAllowance << " KG\n";
-    cout << "=======================================\n";
+    cout<<"\n--- Passenger Profile ---\nID: "<<userId<<"\nName: "<<name<<"\nEmail: "<<email<<"\nPhone: "<<phone<<"\nPassport: "<<passportNo<<"\nBaggage: "<<baggageAllowance<<" KG\n";
 }
-
-void Passenger::searchFlight()
-{
-    cout << "\nFlight search is handled by the main menu.\n";
-}
-
-void Passenger::bookTicket()
-{
-    cout << "\nBooking is handled by the main menu.\n";
-}
-
-void Passenger::cancelTicket()
-{
-    cout << "\nCancellation is handled by the main menu.\n";
-}
-
-void Passenger::viewBookingHistory()
-{
-    cout << "\nBooking history is handled by the main menu.\n";
-}
-
-string Passenger::getPassportNo() const
+char* Passenger::getPassportNo()
 {
     return passportNo;
 }
-
-int Passenger::getBaggageAllowance() const
+int Passenger::getBaggageAllowance()
 {
     return baggageAllowance;
 }

@@ -1,46 +1,24 @@
 #ifndef USER_H
 #define USER_H
-
 #include <iostream>
-#include <string>
+#include <string.h>
 using namespace std;
 
-/*
-    Abstract User class
-    -------------------
-    Common parent class for Passenger and Admin.
-
-    OOP concepts:
-    - Abstraction: displayProfile() is pure virtual.
-    - Inheritance: Passenger/Admin inherit from User.
-    - Encapsulation: common data is protected/private.
-    - Polymorphism: derived classes override displayProfile().
-*/
-class User
-{
+class User {
 protected:
     int userId;
-    string name;
-    string email;
-    string password;
-    string phone;
-
+    char name[50], email[50], password[30], phone[20];
 public:
     User();
-    User(int id, string name, string email, string password, string phone);
-
+    User(int id,const char n[],const char e[],const char p[],const char ph[]);
     virtual ~User();
-
-    // Pure virtual function makes User an abstract class.
-    virtual void displayProfile() = 0;
-
-    bool login(string email, string password);
+    bool login(const char e[],const char p[]);
     void logout();
-
-    int getUserId() const;
-    string getName() const;
-    string getEmail() const;
-    string getPhone() const;
+    virtual void displayProfile()=0;
+    int getUserId();
+    char* getName();
+    char* getEmail();
+    char* getPassword();
+    char* getPhone();
 };
-
 #endif

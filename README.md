@@ -1,23 +1,24 @@
-# Flight Booking System - C++ OOCP Project
+# ✈️ Flight Booking System - C++ OOCP Project
 
-A simple console-based Flight Booking System made for an Object-Oriented C++ college project.
+A simple console-based **Flight Booking System** developed in C++ for a college OOCP project.
 
 ## Main Features
+
 - Passenger registration and login
 - Admin login
-- View all flights
-- Search flights by source and destination
+- View and search flights
 - Seat selection
 - Flight booking
 - Extra baggage calculation
 - UPI / Card / Cash payment simulation
-- Ticket + PNR generation
+- Ticket and PNR generation
 - Booking history
 - Booking cancellation
 - Admin can add/remove flights
-- Simple file handling using `.dat` files
+- Basic file handling using `.dat` files
 
 ## OOP Concepts Demonstrated
+
 - Class and Object
 - Encapsulation
 - Abstraction
@@ -26,57 +27,97 @@ A simple console-based Flight Booking System made for an Object-Oriented C++ col
 - Function Overriding
 - Constructors / Destructors
 - Composition
-- STL vector
+- Arrays
 - File Handling
 
-## 📁 Project Structure
+## Project Structure
 
-| Path | Description |
-|---|---|
-| `main.cpp` | Main entry point of the application |
-| `classes/User.h` | Base user class |
-| `classes/Passenger.h` | Passenger class |
-| `classes/Admin.h` | Admin class |
-| `classes/Airport.h` | Airport information |
-| `classes/Flight.h` | Flight management |
-| `classes/Seat.h` | Seat management |
-| `classes/Booking.h` | Booking management |
-| `classes/Ticket.h` | Ticket and PNR generation |
-| `classes/Payment.h` | Payment abstraction |
-| `classes/Baggage.h` | Baggage management |
-| `implementations/User.cpp` | User class implementation |
-| `implementations/Passenger.cpp` | Passenger class implementation |
-| `implementations/Admin.cpp` | Admin class implementation |
-| `data/flights.dat` | Stores flight data |
-| `data/passengers.dat` | Stores passenger data |
-| `data/bookings.dat` | Stores booking data |
-| `README.md` | Project documentation |
+```text
+FlightBookingSystem/
+│
+├── main.cpp
+│
+├── classes/
+│   ├── User.h
+│   ├── Passenger.h
+│   ├── Admin.h
+│   ├── Airport.h
+│   ├── Flight.h
+│   ├── Seat.h
+│   ├── Booking.h
+│   ├── Ticket.h
+│   ├── Payment.h
+│   └── Baggage.h
+│
+├── implementations/
+│   ├── User.cpp
+│   ├── Passenger.cpp
+│   ├── Admin.cpp
+│   ├── Airport.cpp
+│   ├── Seat.cpp
+│   ├── Flight.cpp
+│   ├── Baggage.cpp
+│   ├── Ticket.cpp
+│   ├── Payment.cpp
+│   └── Booking.cpp
+│
+├── data/
+│   ├── flights.dat
+│   ├── passengers.dat
+│   └── bookings.dat
+│
+└── README.md
+```
 
+## Basic Headers Used
 
-From inside the FlightBookingSystem folder:
+The project intentionally keeps the standard libraries simple:
 
-g++ -std=c++17 main.cpp implementations/User.cpp implementations/Passenger.cpp implementations/Admin.cpp -o FlightBookingSystem
+```cpp
+#include <iostream>
+#include <string.h>
+#include <fstream>
+```
 
-Run:
+- `iostream` → input/output
+- `string.h` → basic C-style string functions
+- `fstream` → file handling
 
-Windows:
+No `vector`, `sstream`, `iomanip`, `limits`, `ctime`, or `algorithm` are used.
+
+## Compile
+
+From inside the project folder:
+
+```bash
+g++ -std=c++17 main.cpp implementations/User.cpp implementations/Passenger.cpp implementations/Admin.cpp implementations/Airport.cpp implementations/Seat.cpp implementations/Flight.cpp implementations/Baggage.cpp implementations/Ticket.cpp implementations/Payment.cpp implementations/Booking.cpp -o FlightBookingSystem
+```
+
+### Windows
+
+```bash
 .\FlightBookingSystem.exe
+```
 
-Linux/macOS:
+### Linux/macOS
+
+```bash
 ./FlightBookingSystem
+```
 
 ## Default Admin
 
-Email:
-admin@airline.com
-
-Password:
-admin123
+```text
+Email    : admin@airline.com
+Password : admin123
+```
 
 ## Notes
 
-- This is intentionally a simple academic project, not a production airline system.
+- This is intentionally a simple academic project.
 - Payment is simulated; no real transaction happens.
-- Data files are simple text files with a `.dat` extension.
-- The project uses a maximum of 20 generated seats per flight to keep the logic easy to understand.
-- Password storage is intentionally simple for demonstration and should not be used in a real application.
+- Data is stored using simple `.dat` files.
+- Each flight has 20 seats.
+- Fixed-size arrays are used instead of advanced containers.
+- Password storage is intentionally simple for demonstration.
+- The project does not use APIs, databases, networking, or GUI frameworks.

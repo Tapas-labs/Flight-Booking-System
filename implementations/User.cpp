@@ -1,61 +1,47 @@
 #include "../classes/User.h"
-
 User::User()
 {
-    userId = 0;
-    name = "";
-    email = "";
-    password = "";
-    phone = "";
+    userId=0;
+    strcpy(name,"");
+    strcpy(email,"");
+    strcpy(password,"");
+    strcpy(phone,"");
 }
-
-User::User(int id, string name, string email,
-           string password, string phone)
+User::User(int id,const char n[],const char e[],const char p[],const char ph[])
 {
-    this->userId = id;
-    this->name = name;
-    this->email = email;
-    this->password = password;
-    this->phone = phone;
+    userId=id;
+    strcpy(name,n);
+    strcpy(email,e);
+    strcpy(password,p);
+    strcpy(phone,ph);
 }
-
-User::~User()
+User::~User(){}
+bool User::login(const char e[],const char p[])
 {
+    return strcmp(email,e)==0 && strcmp(password,p)==0;
 }
-
-bool User::login(string email, string password)
-{
-    if (this->email == email && this->password == password)
-    {
-        cout << "\nLogin Successful!\n";
-        return true;
-    }
-
-    cout << "\nInvalid Email or Password!\n";
-    return false;
-}
-
 void User::logout()
 {
-    cout << "\n" << name << " logged out successfully.\n";
+    cout<<name<<" logged out successfully.\n";
 }
-
-int User::getUserId() const
+void User::displayProfile(){}
+int User::getUserId()
 {
     return userId;
 }
-
-string User::getName() const
+char* User::getName()
 {
     return name;
 }
-
-string User::getEmail() const
+char* User::getEmail()
 {
     return email;
 }
-
-string User::getPhone() const
+char* User::getPassword()
+{
+    return password;
+}
+char* User::getPhone()
 {
     return phone;
 }
