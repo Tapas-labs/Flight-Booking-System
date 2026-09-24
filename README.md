@@ -69,22 +69,6 @@ FlightBookingSystem/
 └── README.md
 ```
 
-## Basic Headers Used
-
-The project intentionally keeps the standard libraries simple:
-
-```cpp
-#include <iostream>
-#include <string.h>
-#include <fstream>
-```
-
-- `iostream` → input/output
-- `string.h` → basic C-style string functions
-- `fstream` → file handling
-
-No `vector`, `sstream`, `iomanip`, `limits`, `ctime`, or `algorithm` are used.
-
 ## Compile
 
 From inside the project folder:
