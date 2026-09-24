@@ -92,7 +92,7 @@ g++ -std=c++17 main.cpp implementations/User.cpp implementations/Passenger.cpp i
 ## Default Admin
 
 ```text
-Email    : admin@airline.com
+Email    : admin@gmail.com
 Password : admin123
 ```
 
